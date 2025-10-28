@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// User query logs for analytics and debugging
+model QueryLog {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  query       String
+  queryType   String   // "direct" or "nlp"
+  baseCurrency String?
+  targetCurrency String?
+  rate        Float?
+  success     Boolean
+  errorMessage String?
+  userId      String?  // Optional - if you want to track per-user
+  createdAt   DateTime @default(now())
+
+  @@map("query_logs")
+}
+
+// Exchange rate cache for faster lookups
+model ExchangeRateCache {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  baseCurrency    String
+  targetCurrency  String
+  rate            Float
+  fetchedAt       DateTime @default(now())
+  expiresAt       DateTime
+
+  @@unique([baseCurrency, targetCurrency])
+  @@map("exchange_rate_cache")
+}
+
+// User preferences (optional, for future features)
+model UserPreference {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String   @unique
+  favoriteCurrencies String[]
+  defaultBaseCurrency String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("user_preferences")
+}
